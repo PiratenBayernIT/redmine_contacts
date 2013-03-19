@@ -42,6 +42,14 @@
 		<th class = "website"><%= l(:field_contact_website) %>:</th>
 		<td class="website url"><%= link_to @contact.website, @contact.website_address %></td>
 	</tr>   
+	<tr>
+      <th class="xmpp">XMPP:</th>
+      <td class="xmpp"><%= h @contact.xmpp %></td>
+    </tr>
+	<tr>
+      <th class="twitter">Twitter:</th>
+      <td class="twitter"><%= h @contact.twitter %></td>
+    </tr>   
 	<% if !@contact.skype_name.blank? %>
 	<tr> 
 	  <th class = "skype"><%= l(:field_contact_skype) %>:</th>
