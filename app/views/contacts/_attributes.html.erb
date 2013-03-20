@@ -48,7 +48,7 @@
     </tr>
 	<tr>
       <th class="twitter">Twitter:</th>
-      <td class="twitter"><%= h @contact.twitter %></td>
+      <td class="twitter"><%= link_to "@" + @contact.twitter, "https://twitter.com/#{@contact.twitter}" %></td>
     </tr>   
 	<% if !@contact.skype_name.blank? %>
 	<tr> 
