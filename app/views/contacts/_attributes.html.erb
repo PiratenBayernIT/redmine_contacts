@@ -44,11 +44,20 @@
 	</tr>   
 	<tr>
       <th class="xmpp">XMPP:</th>
-      <td class="xmpp"><%= h @contact.xmpp %></td>
+      <td class="xmpp">
+      	<% if !@contact.xmpp.blank? %>
+      	<%= h @contact.xmpp %>
+		<% end %>
+	  </td>
     </tr>
 	<tr>
       <th class="twitter">Twitter:</th>
-      <td class="twitter"><%= link_to "@" + @contact.twitter, "https://twitter.com/#{@contact.twitter}" %></td>
+	  
+      <td class="twitter">
+      	<% if !@contact.twitter.blank? %>
+      	<%= link_to "@" + @contact.twitter, "https://twitter.com/#{@contact.twitter}" %>
+		<% end %>
+	  </td>
     </tr>   
 	<% if !@contact.skype_name.blank? %>
 	<tr> 
