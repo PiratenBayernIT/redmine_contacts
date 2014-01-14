@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2012 Kirill Bezrukov
-
+// Copyright (c) 2011-2013 Kirill Bezrukov
 
 var noteFileFieldCount = 1;
 
@@ -25,7 +24,7 @@ function updateCustomForm(url, form) {
   $.ajax({
     url: url,
     type: 'post',
-    data: form.serialize()
+    data: $(form).serialize()
   });
 }
 
@@ -36,7 +35,7 @@ function toggleContact(event, element)
 		if (element.checked) {
 			checkAllContacts($$('.contacts.index td.checkbox input'));
 		}
-		else 
+		else
 		{
 			uncheckAllContacts($$('.contacts.index td.checkbox input'));
 		}
@@ -45,7 +44,7 @@ function toggleContact(event, element)
 	{
 		Element.up(element, 'tr').toggleClassName('context-menu-selection');
 	}
-}  
+}
 
 
 // Observ field function

@@ -1,12 +1,111 @@
 == Redmine CRM plugin changelog
 
-Redmine CRM plugin - customer retaionship management plugin for redmine
-Copyright (C) 2011-2012 Kirill Bezrukov
+Redmine CRM plugin - customer relationship management plugin for redmine
+Copyright (C) 2011-2013 Kirill Bezrukov
 http://www.redminecrm.com/
+
+== 2014-01-03 v3.2.12
+
+* French translation update (Olivier Houdas)
+* Check if deal status is in use before delete
+* Fixed bug with top and app menu links with project id
+* Fixed bug with show and export multiple values custom field
+
+== 2013-12-09 v3.2.11
+
+* Livesearch case insensitive for PostgreSQL
+* Added post address format settings
+* Spanish translation update (Luis Blasco)
+* German translation update (Alex Meindl)
+
+== 2013-12-06 v3.2.10
+
+* Contacts autocomplete UI cleanup
+* Export post code to CSV and Excel
+* New modal form for connect contacts and issues
+* Liquid drops and filters (new custom invoice template support)
+* Setting for major currencies list
+* Spanish translation update (Luis Blasco)
+* German translation update (Alex Meindl)
+
+== 2013-11-20 v3.2.9
+
+* Fixed bug with Redmine 2.4 compatibility (Show issue page SQL syntax error)
+* Brazilian Portuguese translation (Marcelo Fernandes)
+* Ajax moving deals on the board
+
+== 2013-11-16 v3.2.8
+
+* Deals board view
+* Coping deals
+* Create deals from global list (autorefresh deal form)
+* Select contacts and deals list view type
+* Show authoring info for deals
+
+== 2013-10-22 v3.2.7
+
+* Structured address for contacts
+
+== 2013-09-30 v3.2.6
+
+* Merging tags
+* New tags styles for redmine_tags plugin support
+* Deals probability and close_date in excerpt list
+
+== 2013-09-20 v3.2.5
+
+* Deals as a separate project module
+* Fixed employees and employees notes security issues
+* Send attachments to contact fixes
+* Deals tab always present for projects with deals module
+* Autocomplete for issues and deals contacts selection
+* Support for contacts_google_sync plugin
+* Czech translation fixes (Martin Štorkán)
+* vCard export limit takes from issues export limit
+* Fixed permission check for add and delete contact to project
+* Contact avatar as deal logo
+
+== 2013-07-02 v3.2.4
+
+* Ruby 2.0.0 support (vpim gem changed to vcard)
+* Fixed bug with bulk update
+* REST API for notes
+
+== 2013-04-25 v3.2.3
+
+* Contact avatars and companies in autocompletes
+* CSV export deals with custom fields
+* UTF-8 encoding for CSV export files
+* Contact tabs for Invoices and Helpdesk tickets
+* Korean translation (eunsu)
+* Fixed contact custom fields table sorting
+* Fixed add note with custom fields
+
+== 2013-04-15 v3.2.2
+
+* Contact page tabs
+* New add note form with time field
+* Ajax attachments for notes
+* Fixed gravatar for companies
+* Performance optimization
+* Has deals and Has open issues filters for contacts
+* Fixed deals filters with empty status field
+* Updated field sorting for deals and contacts
+* Exntended add contact modal form
+* Open deals sum on contact deals tab
+* Show and edit watchers on deal page
+* Show deals on top menu setting
+
+== 2013-04-03 v3.2.1
+
+* New default currencies CHF, SGD
+* Core methods clean up
+* Global contacts list performance optimization
+* Fixed redirects after bulk deals destroy and update
 
 == 2013-03-18 v3.2.0
 
-* Show deal status workflow 
+* Show deal status workflow
 * Deals probability and due date
 * Deal status open, won, lost types
 * Export deals to CSV

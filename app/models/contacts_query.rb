@@ -1,3 +1,22 @@
+# This file is a part of Redmine CRM (redmine_contacts) plugin,
+# customer relationship management plugin for Redmine
+#
+# Copyright (C) 2011-2013 Kirill Bezrukov
+# http://www.redminecrm.com/
+#
+# redmine_contacts is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# redmine_contacts is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with redmine_contacts.  If not, see <http://www.gnu.org/licenses/>.
+
 class ContactsQuery < ActiveRecord::Base
   unloadable
   require "query"
@@ -60,6 +79,11 @@ class ContactsQuery < ActiveRecord::Base
     QueryColumn.new(:company, :sortable => "#{Contact.table_name}.company", :caption => :field_contact_company, :groupable => true),
     QueryColumn.new(:phone, :sortable => "#{Contact.table_name}.phone", :caption => :field_contact_phone),
     QueryColumn.new(:email, :sortable => "#{Contact.table_name}.email", :caption => :field_contact_email),
+    QueryColumn.new(:city, :sortable => "#{Address.table_name}.city", :caption => :label_crm_city),
+    QueryColumn.new(:region, :sortable => "#{Address.table_name}.region", :caption => :label_crm_region),
+    QueryColumn.new(:postcode, :sortable => "#{Address.table_name}.postcode", :caption => :label_crm_postcode),
+    QueryColumn.new(:country, :sortable => "#{Address.table_name}.country", :caption => :label_crm_country),
+    QueryColumn.new(:address, :sortable => "#{Address.table_name}.full_address", :caption => :label_crm_address),
     QueryColumn.new(:created_on, :sortable => "#{Contact.table_name}.created_on"),
     QueryColumn.new(:updated_on, :sortable => "#{Contact.table_name}.updated_on"),
     QueryColumn.new(:assigned_to, :sortable => lambda {User.fields_for_order_statement}, :groupable => true),
@@ -132,7 +156,7 @@ class ContactsQuery < ActiveRecord::Base
   def add_filter_error(field, message)
     m = label_for(field) + " " + l(message, :scope => 'activerecord.errors.messages')
     errors.add(:base, m)
-  end  
+  end
 
   # Returns true if the query is visible to +user+ or the current user.
   def visible?(user=User.current)
@@ -157,11 +181,16 @@ class ContactsQuery < ActiveRecord::Base
                            "company" => { :type => :string, :order => 4 },
                            "phone" => { :type => :text, :order => 5 },
                            "email" => { :type => :text, :order => 6 },
-                           "address" => { :type => :text, :order => 7 },
+                           "full_address" => { :type => :text, :order => 7, :name => l(:label_crm_address) },
+                           "city" => { :type => :text, :order => 8, :name => l(:label_crm_city)},
+                           "region" => { :type => :text, :order => 9, :name => l(:label_crm_region)},
+                           "postcode" => { :type => :text, :order => 10, :name => l(:label_crm_postcode)},
+                           "country_code" => { :type => :list_optional, :values => l(:label_crm_countries).map{|k, v| [v, k]}, :order => 11, :name => l(:label_crm_country)},
                            "is_company" => { :type => :list, :values => [[l(:general_text_yes), ActiveRecord::Base.connection.quoted_true.gsub(/'/, '')], [l(:general_text_no), ActiveRecord::Base.connection.quoted_false.gsub(/'/, '')]], :order => 12 },
-                           "last_note" => { :type => :date_past, :order => 9 },
-                           "updated_on" => { :type => :date_past, :order => 10 },
-                           "created_on" => { :type => :date, :order => 11 }}
+                           "last_note" => { :type => :date_past, :order => 13 },
+                           "has_deals" => {:type => :list, :values => [[l(:general_text_yes), "1"], [l(:general_text_no), "0"]], :order => 14, :name => l(:label_crm_has_deals)},
+                           "updated_on" => { :type => :date_past, :order => 20 },
+                           "created_on" => { :type => :date, :order => 21 }}
 
     principals = []
     if project
@@ -186,13 +215,19 @@ class ContactsQuery < ActiveRecord::Base
     author_values += users.collect{|s| [s.name, s.id.to_s] }
     @available_filters["author_id"] = { :type => :list, :order => 8, :values => author_values } unless author_values.empty?
 
+    issues_assignee_values = []
+    issues_assignee_values << ["<< #{l(:label_me)} >>", "me"] if User.current.logged?
+    issues_assignee_values += (Setting.issue_group_assignment? ? principals : users).collect{|s| [s.name, s.id.to_s] }
+    @available_filters["has_open_issues"] = { :type => :list_optional, :order => 7, :values => issues_assignee_values, :name => l(:label_crm_has_open_issues) } unless issues_assignee_values.empty?
+
+
     # if User.current.logged?
     #   @available_filters["watcher_id"] = { :type => :list, :order => 9, :values => [["<< #{l(:label_me)} >>", "me"]] }
     # end
 
-    tag_options = project.blank? ? {} : {:project => project.id} 
+    tag_options = project.blank? ? {} : {:project => project.id}
     @available_filters["tags"] = {:type  => :list, :order  => 12,
-              :values => Contact.available_tags(tag_options).collect{ |t| [t.name, t.name] }} 
+              :values => Contact.available_tags(tag_options).collect{ |t| [t.name, t.name] }}
 
     @available_filters.each do |field, options|
       options[:name] ||= l("field_#{field}".gsub(/_id$/, ''))
@@ -209,7 +244,7 @@ class ContactsQuery < ActiveRecord::Base
     end
     json
   end
-  
+
   def all_projects
     @all_projects ||= Project.visible.all
   end
@@ -224,7 +259,7 @@ class ContactsQuery < ActiveRecord::Base
     end
     @all_projects_values = values
   end
-  
+
   def add_filter(field, operator, values)
     # values must be an array
     return unless values.nil? || values.is_a?(Array)
@@ -338,7 +373,7 @@ class ContactsQuery < ActiveRecord::Base
   end
 
   def has_column?(column)
-    column_names && column_names.include?(column.name)
+    column_names && column_names.include?(column.is_a?(QueryColumn) ? column.name : column)
   end
 
   def has_default_columns?
@@ -423,7 +458,7 @@ class ContactsQuery < ActiveRecord::Base
       operator = operator_for(field)
 
       # "me" value subsitution
-      if %w(assigned_to_id author_id watcher_id).include?(field)
+      if %w(assigned_to_id author_id watcher_id has_open_issues).include?(field)
         if v.delete("me")
           if User.current.logged?
             v.push(User.current.id.to_s)
@@ -440,17 +475,23 @@ class ContactsQuery < ActiveRecord::Base
         # specific statement
         filters_clauses << send("sql_for_#{field}_field", field, operator, v)
       elsif field == "last_note"
-        filters_clauses << sql_for_last_note_field(field, operator, v)            
+        filters_clauses << sql_for_last_note_field(field, operator, v)
+      elsif field == "has_deals"
+        filters_clauses << sql_for_has_deals_field(field, operator, v)
+      elsif field == "has_open_issues"
+        filters_clauses << sql_for_has_open_issues_field(field, operator, v)
+      elsif %w(city region country_code postcode full_address).include?(field)
+        filters_clauses << sql_for_address_field(field, operator, v)
       elsif field == "tags"
-        compare   = operator_for('tags').eql?('=') ? 'IN' : 'NOT IN'    
+        compare   = operator_for('tags').eql?('=') ? 'IN' : 'NOT IN'
         ids_list  = Contact.tagged_with(v).collect{|contact| contact.id }.push(0).join(',')
 
-        filters_clauses << "( #{Contact.table_name}.id #{compare} (#{ids_list}) ) "      
-      else  
+        filters_clauses << "( #{Contact.table_name}.id #{compare} (#{ids_list}) ) "
+      else
         # regular field
         filters_clauses << '(' + sql_for_field(field, operator, v, Contact.table_name, field) + ')'
       end
-   
+
 
     end if filters and valid?
 
@@ -460,9 +501,13 @@ class ContactsQuery < ActiveRecord::Base
     filters_clauses.any? ? filters_clauses.join(' AND ') : nil
   end
 
+  def sql_for_address_field(field, operator, value)
+    sql_for_field(field, operator, value, Address.table_name, field)
+  end
+
   # Returns the contact count
   def contact_count
-    Contact.visible.count(:conditions => statement)
+    Contact.visible.includes(:address).count(:conditions => statement)
   rescue ::ActiveRecord::StatementInvalid => e
     raise StatementInvalid.new(e.message)
   end
@@ -489,15 +534,30 @@ class ContactsQuery < ActiveRecord::Base
   def contacts(options={})
     order_option = [group_by_sort_order, options[:order]].reject {|s| s.blank?}.join(',')
     order_option = nil if order_option.blank?
-    
-    joins = (order_option && order_option.include?('authors')) ? "LEFT OUTER JOIN users authors ON authors.id = #{Contact.table_name}.author_id" : nil
-    
+
+    # joins = (order_option && order_option.include?('authors')) ? "LEFT OUTER JOIN users authors ON authors.id = #{Contact.table_name}.author_id" : nil
+
+    joins = []
+    if order_option
+      if order_option.include?('authors')
+        joins <<  "LEFT OUTER JOIN users authors ON authors.id = #{Contact.table_name}.author_id"
+      end
+      order_option.scan(/cf_\d+/).uniq.each do |name|
+        column = available_columns.detect {|c| c.name.to_s == name}
+        join = column && column.custom_field.join_for_order_statement
+        if join
+          joins << join
+        end
+      end
+    end
+    joins = joins.any? ? joins.join(' ') : nil
+
+
     scope = Contact.scoped({})
-    
-    options[:search].split(' ').collect{ |search_string| scope = scope.live_search(search_string) } unless options[:search].blank? 
-    options[:include] << :assigned_to if (order_option && order_option.include?('users')) 
-    
-    scope.visible.scoped(:conditions => options[:conditions]).find :all, :include => ([:projects] + (options[:include] || [])).uniq,
+
+    options[:search].split(' ').collect{ |search_string| scope = scope.live_search(search_string) } unless options[:search].blank?
+    options[:include] << :assigned_to if (order_option && order_option.include?('users'))
+    scope.visible.scoped(:conditions => options[:conditions]).find :all, :include => ([:projects, :address] + (options[:include] || [])).uniq,
                      :conditions => statement,
                      :order => order_option,
                      :joins => joins,
@@ -509,31 +569,76 @@ class ContactsQuery < ActiveRecord::Base
 
   private
 
+  def sql_for_has_deals_field(field, operator, value)
+    db_table = Deal.table_name
+    if operator == "!"
+      "#{Contact.table_name}.id IN (
+        SELECT #{db_table}.contact_id FROM #{db_table}
+        GROUP BY #{db_table}.contact_id
+        HAVING COUNT(#{db_table}.id) = 0)"
+    else operator == "="
+      "#{Contact.table_name}.id IN (
+        SELECT #{db_table}.contact_id FROM #{db_table}
+        GROUP BY #{db_table}.contact_id
+        HAVING COUNT(#{db_table}.id) > 0)"
+    end
+  end
+
+  def sql_for_has_open_issues_field(field, operator, value)
+    db_table = ContactNote.table_name
+    if operator == "!*"
+      "#{Contact.table_name}.id IN (
+        SELECT #{Contact.table_name}.id FROM #{Contact.table_name}
+        LEFT JOIN contacts_issues ON contacts_issues.contact_id = #{Contact.table_name}.id
+        LEFT JOIN #{Issue.table_name} ON contacts_issues.issue_id = #{Issue.table_name}.id
+        LEFT JOIN #{IssueStatus.table_name} ON #{IssueStatus.table_name}.id = #{Issue.table_name}.status_id
+        WHERE (#{IssueStatus.table_name}.is_closed = #{ActiveRecord::Base.connection.quoted_false}) OR (#{IssueStatus.table_name}.is_closed IS NULL)
+        GROUP BY #{Contact.table_name}.id
+        HAVING COUNT(#{Issue.table_name}.id) = 0)"
+    elsif operator == "*"
+      "#{Contact.table_name}.id IN (
+        SELECT contacts_issues.contact_id FROM contacts_issues
+        INNER JOIN #{Issue.table_name} ON contacts_issues.issue_id = #{Issue.table_name}.id
+        INNER JOIN #{IssueStatus.table_name} ON #{IssueStatus.table_name}.id = #{Issue.table_name}.status_id
+        WHERE #{IssueStatus.table_name}.is_closed = #{ActiveRecord::Base.connection.quoted_false}
+        GROUP BY contacts_issues.contact_id
+        HAVING COUNT(#{Issue.table_name}.id) > 0)"
+    else
+      "#{Contact.table_name}.id IN (
+        SELECT contacts_issues.contact_id FROM contacts_issues
+        INNER JOIN #{Issue.table_name} ON contacts_issues.issue_id = #{Issue.table_name}.id
+        INNER JOIN #{IssueStatus.table_name} ON #{IssueStatus.table_name}.id = #{Issue.table_name}.status_id
+        WHERE #{IssueStatus.table_name}.is_closed = #{ActiveRecord::Base.connection.quoted_false}
+          AND #{sql_for_field("assigned_to_id", operator, value, Issue.table_name, 'assigned_to_id')}
+        GROUP BY contacts_issues.contact_id)"
+    end
+  end
+
   def sql_for_last_note_field(field, operator, value)
     db_table = ContactNote.table_name
     if operator == "!*"
-      "#{Contact.table_name}.id IN ( 
+      "#{Contact.table_name}.id IN (
         SELECT #{Contact.table_name}.id FROM #{Contact.table_name}
         LEFT JOIN #{db_table} ON #{db_table}.source_id = #{Contact.table_name}.id and #{db_table}.source_type = 'Contact'
         GROUP BY #{Contact.table_name}.id
         HAVING COUNT(#{db_table}.id) = 0)"
     elsif operator == "*"
-      "#{Contact.table_name}.id IN ( 
+      "#{Contact.table_name}.id IN (
         SELECT #{Contact.table_name}.id FROM #{Contact.table_name}
         INNER JOIN #{db_table} ON #{db_table}.source_id = #{Contact.table_name}.id and #{db_table}.source_type = 'Contact'
         GROUP BY #{Contact.table_name}.id
-        HAVING COUNT(#{db_table}.id) > 0)"      
+        HAVING COUNT(#{db_table}.id) > 0)"
     else
       "#{Contact.table_name}.id IN (
-        SELECT #{db_table}.source_id 
-        FROM #{db_table} 
-        WHERE #{db_table}.source_type='Contact' 
+        SELECT #{db_table}.source_id
+        FROM #{db_table}
+        WHERE #{db_table}.source_type='Contact'
         AND #{db_table}.id IN
-          (SELECT MAX(#{db_table}.id) 
-           FROM #{db_table} 
-           WHERE #{db_table}.source_type='Contact' 
+          (SELECT MAX(#{db_table}.id)
+           FROM #{db_table}
+           WHERE #{db_table}.source_type='Contact'
            GROUP BY #{db_table}.source_id)
-        AND #{sql_for_field(field, operator, value, db_table, 'created_on')} 
+        AND #{sql_for_field(field, operator, value, db_table, 'created_on')}
       )"
     end
   end
@@ -544,7 +649,7 @@ class ContactsQuery < ActiveRecord::Base
       sql_for_field(field, '=', value, db_table, 'user_id') + ')'
   end
 
-    def sql_for_member_of_group_field(field, operator, value)
+  def sql_for_member_of_group_field(field, operator, value)
     if operator == '*' # Any group
       groups = Group.all
       operator = '=' # Override the operator since we want to find by assigned_to

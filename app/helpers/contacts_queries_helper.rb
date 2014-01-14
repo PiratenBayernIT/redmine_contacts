@@ -1,4 +1,24 @@
 # encoding: utf-8
+#
+# This file is a part of Redmine CRM (redmine_contacts) plugin,
+# customer relationship management plugin for Redmine
+#
+# Copyright (C) 2011-2013 Kirill Bezrukov
+# http://www.redminecrm.com/
+#
+# redmine_contacts is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# redmine_contacts is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with redmine_contacts.  If not, see <http://www.gnu.org/licenses/>.
+
 module ContactsQueriesHelper
 
   def contacts_filters_options_for_select(query)
@@ -18,8 +38,17 @@ module ContactsQueriesHelper
                       content_tag('th', h(column.caption))
   end
 
+
   def contacts_column_content(column, contact)
     value = column.value(contact)
+    if value.is_a?(Array)
+      value.collect {|v| contacts_column_value(column, contact, v)}.compact.join(', ').html_safe
+    else
+      contacts_column_value(column, contact, value)
+    end
+  end
+
+  def contacts_column_value(column, contact, value)
     case value.class.name
     when 'String'
       if column.name == :subject
@@ -60,7 +89,16 @@ module ContactsQueriesHelper
     end
   end
 
-  # Retrieve query from session or build a new query
+  def contacts_list_style
+    list_styles = ['list_excerpt']
+    if params[:contacts_list_style].blank?
+      list_style = list_styles.include?(session[:contacts_list_style]) ? session[:contacts_list_style] : RedmineContacts.default_list_style
+    else
+      list_style = list_styles.include?(params[:contacts_list_style]) ? params[:contacts_list_style] : RedmineContacts.default_list_style
+    end
+    session[:contacts_list_style] = list_style
+  end
+
   def retrieve_contacts_query
     if !params[:query_id].blank?
       cond = "project_id IS NULL"
@@ -83,6 +121,5 @@ module ContactsQueriesHelper
       @query.project = @project
     end
   end
-
 
 end
