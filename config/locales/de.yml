@@ -82,6 +82,8 @@ de:
   field_contact_email: E-Mail
   field_contact_website: Website
   field_contact_skype: Skype
+  field_contact_xmpp: XMPP (Jabber)
+  field_contact_twitter: Twitter (ohne @)
   field_contact_status: Status
   field_contact_background: Hintergrundinformationen
   field_contact_tag_names: Tags

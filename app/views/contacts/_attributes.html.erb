@@ -47,10 +47,17 @@
 		<th class = "website"><%= l(:field_contact_website) %>:</th>
 		<td class="website url"><%= link_to @contact.website, @contact.website_address, :class => 'external' %></td>
 	</tr>
-	<% if !@contact.skype_name.blank? %>
+    <%# PiratenBayernIT: added xmpp and twitter, removed skype %>
+	<% if !@contact.xmpp.blank? %>
 	<tr>
-	  <th class = "skype"><%= l(:field_contact_skype) %>:</th>
-	  <td class="skype"><%= skype_to @contact.skype_name %></td>
+	  <th class="xmpp"><%= l(:field_contact_xmpp) %>:</th>
+	  <td class="xmpp"><%= h @contact.xmpp %></td>
+	</tr>
+	<% end %>
+	<% if !@contact.twitter.blank? %>
+	<tr>
+	  <th class="twitter"><%= l(:field_contact_twitter) %>:</th>
+	  <td class="twitter"><%= link_to "@" + @contact.twitter, "https://twitter.com/#{@contact.twitter}" %></td>
 	</tr>
 	<% end %>
 	<% if !@contact.birthday.blank? %>

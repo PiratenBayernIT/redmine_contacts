@@ -62,7 +62,9 @@
 	</p>
 
 	<p class="extended"><%= f.text_field 'website', :label=>l(:field_contact_website) -%></p>
-	<p class="extended"><%= f.text_field 'skype_name', :label=>l(:field_contact_skype) -%></p>
+    <%# PiratenBayernIT: added xmpp and twitter, removed skype %>
+	<p class="extended"><%= f.text_field 'xmpp', :label=>l(:field_contact_xmpp) -%></p>
+	<p class="extended"><%= f.text_field 'twitter', :label=>l(:field_contact_twitter) -%></p>
 	<p class="extended notes"><%= f.text_area :background , :cols => 80, :rows => 8, :class => 'wiki-edit', :label=>l(:field_contact_background)  %></p>
 	<%= wikitoolbar_for 'contact_background' %>
 

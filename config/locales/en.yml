@@ -90,6 +90,8 @@ en:
   field_contact_email: Email
   field_contact_website: Website
   field_contact_skype: Skype
+  field_contact_xmpp: XMPP (Jabber)
+  field_contact_twitter: Twitter (without @)
   field_contact_status: Status
   field_contact_background: Background
   field_contact_tag_names: Tags

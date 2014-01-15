@@ -187,8 +187,6 @@ module ContactsHelper
       image_tag("https://graph.facebook.com/#{obj.facebook.gsub('.*facebook.com\/','')}/picture?type=square#{'&return_ssl_resources=1' if (request && request.ssl?)}", options)
     elsif obj.is_a?(Contact) && obj.primary_email && obj.primary_email =~ %r{^(.*)@mail.ru$}
       image_tag("http#{'s' if (request && request.ssl?)}://avt.appsmail.ru/mail/#{$1}/_avatar", options)
-    elsif obj.respond_to?(:twitter) &&  !obj.twitter.blank?
-      image_tag("https://api.twitter.com/1/users/profile_image?screen_name=#{obj.twitter}&size=bigger", options)
     elsif Setting.gravatar_enabled? && obj.is_a?(Contact) && obj.primary_email
       # options.merge!({:ssl => (request && request.ssl?), :default => "#{request.protocol}#{request.host_with_port}/plugin_assets/redmine_contacts/images/#{obj_icon}"})
       # gravatar(obj.primary_email.downcase, options) rescue image_tag(obj_icon, options.merge({:plugin => "redmine_contacts"}))
